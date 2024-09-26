@@ -99,7 +99,7 @@ public class VehicleController : MonoBehaviour
 
 	internal void KeepUpright()
 	{
-		float relativeAngle = ProcessAngle(transform.localEulerAngles.z);
+		float relativeAngle = NormalizeAngle(transform.localEulerAngles.z);
 
 		float force = -Mathf.Max(Mathf.Abs(Mathf.Abs(relativeAngle) - 30f) / -30f + 1, 0) * 2f;
 
@@ -108,7 +108,7 @@ public class VehicleController : MonoBehaviour
 		_rb.AddRelativeTorque(0f, 0f, force, ForceMode.Acceleration);
 	}
 
-	public float ProcessAngle(float angle)
+	public float NormalizeAngle(float angle)
 	{
 		return angle > 180 ? angle - 360 : angle;
 	}
@@ -131,7 +131,7 @@ public class VehicleController : MonoBehaviour
 		Quaternion worldWishDir, localWishDir;
 		worldWishDir = Quaternion.LookRotation(NavigationBezier() - transform.position);
 		localWishDir = worldWishDir * Quaternion.Inverse(transform.rotation);
-		desireAngle = ProcessAngle(localWishDir.eulerAngles.y);
+		desireAngle = NormalizeAngle(localWishDir.eulerAngles.y);
 		desiredSteerAngle = Mathf.Clamp(desireAngle, -maxSteerAngle, maxSteerAngle);
 	}
 
@@ -178,8 +178,8 @@ public class VehicleController : MonoBehaviour
 
 				Vector3 halfVector = (transform.forward + nextVector).normalized;
 
-				Debug.DrawLine(transform.position, transform.position + nextVector.normalized * 4f, Color.green);
-				Debug.DrawLine(transform.position, transform.position + transform.forward * 4f, Color.green);
+				//Debug.DrawLine(transform.position, transform.position + nextVector.normalized * 4f, Color.green);
+				//Debug.DrawLine(transform.position, transform.position + transform.forward * 4f, Color.green);
 				Debug.DrawLine(transform.position, transform.position - halfVector * 4f, Color.cyan);
 
 				Debug.DrawLine(NavigationBezier(), target.position, Color.yellow);

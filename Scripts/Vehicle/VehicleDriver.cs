@@ -19,6 +19,9 @@ public class VehicleDriver : MonoBehaviour
 
 	private float _width;
 
+	private RaycastHit obstacleHitInfo;
+	private bool obstacleHit;
+
 	private void Awake()
 	{
 		vc = GetComponent<VehicleController>();
@@ -52,20 +55,45 @@ public class VehicleDriver : MonoBehaviour
 
 	private void BasicObstacleAvoidance()
 	{
-		const float maxDistance = 16f;
+		const float castDistance = 8f;
 
-		RaycastHit hitInfo;
-		Physics.BoxCast(transform.position, new(_width / 2f, 0f, 0f), transform.forward, out hitInfo, transform.rotation, maxDistance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+		obstacleHitInfo = default;
+		RaycastHit[] hits = Physics.BoxCastAll(transform.position, new(_width / 2f, 0.001f, 0.001f), transform.forward, transform.rotation, castDistance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
 
-		if (!hitInfo.Equals(default(RaycastHit)))
+		float maxDistance = Mathf.Infinity;
+
+		int hitIndex = 0;
+		obstacleHit = false;
+
+		for (int i = 0; i < hits.Length; i++)
 		{
-			if (new Vector2(hitInfo.normal.x, hitInfo.normal.z).magnitude > hitInfo.normal.y) { return; }
+			if (hits[i].point == Vector3.zero ||
+				new Vector2(hits[i].normal.x, hits[i].normal.z).magnitude < hits[i].normal.y ||
+				hits[i].transform.IsChildOf(transform.root))
+				continue;
+
+			if (hits[i].distance < maxDistance)
+			{
+				hitIndex = i;
+				maxDistance = hits[i].distance;
+				obstacleHit = true;
+			}
+		}
+
+		if (obstacleHit)
+		{
+			obstacleHitInfo = hits[hitIndex];
+			float influence = 1f - Mathf.Clamp01(obstacleHitInfo.distance / maxDistance);
+		}
+
+		if (!obstacleHitInfo.Equals(default(RaycastHit)))
+		{
 			//Vector3 hitCenter = transform.position + transform.InverseTransformDirection(hitInfo.point - transform.position).z * transform.forward;
 			//Debug.DrawLine(transform.position, hitCenter, Color.blue);
 			//Vector3 offset = transform.right * _width / 2f;
 			//Debug.DrawLine(hitCenter - offset, hitCenter + offset, Color.blue);
 
-			float influence = 1f - Mathf.Clamp01(hitInfo.distance / maxDistance);
+			/*
 
 			vc.throttle = Mathf.Clamp(vc.throttle, 0f, 1 - Mathf.Clamp01((influence - 0.5f) / 0.5f));
 
@@ -76,7 +104,7 @@ public class VehicleDriver : MonoBehaviour
 				steeringMin = preferredSign > 0f ? 0f + angleOffset : -vc.maxSteerAngle,
 				steeringMax = preferredSign > 0f ? vc.maxSteerAngle : 0f - angleOffset;
 
-			vc.desiredSteerAngle = Mathf.Clamp(vc.desiredSteerAngle, steeringMin, steeringMax);
+			vc.desiredSteerAngle = Mathf.Clamp(vc.desiredSteerAngle, steeringMin, steeringMax);*/
 		}
 	}
 
@@ -114,7 +142,17 @@ public class VehicleDriver : MonoBehaviour
 
 	private void OnDrawGizmos()
 	{
-
+		if (obstacleHit)
+		{
+			Color orange = new(1f, 0.5f, 0f);
+			Vector3 rayEnd = transform.position + transform.forward * obstacleHitInfo.distance;
+			Debug.DrawLine(transform.position, rayEnd, orange);
+			Vector3 offset = _width / 2 * transform.right;
+			Debug.DrawLine(rayEnd - offset, rayEnd + offset, orange);
+			Debug.DrawRay(obstacleHitInfo.point, obstacleHitInfo.normal, Color.blue);
+			Gizmos.color = Color.blue;
+			Gizmos.DrawSphere(obstacleHitInfo.point, 0.25f);
+		}
 	}
 
 	/*
