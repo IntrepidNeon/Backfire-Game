@@ -45,7 +45,7 @@ public class VehicleController : MonoBehaviour
 	}
 	internal void FixedUpdate()
 	{
-		Navigate();
+		//Navigate();
 		UpdateWheels();
 	}
 	private void Start()
@@ -106,6 +106,7 @@ public class VehicleController : MonoBehaviour
 		Debug.Log(force);
 
 		_rb.AddRelativeTorque(0f, 0f, force, ForceMode.Acceleration);
+
 	}
 
 	public float NormalizeAngle(float angle)
@@ -157,9 +158,16 @@ public class VehicleController : MonoBehaviour
 
 	void OnDrawGizmos()
 	{
+		if (_rb)
+		{
+			Handles.Label(transform.position, "" + _rb.velocity.magnitude);
+		}
+		
+
+		return;
 		if (target)
 		{
-			Debug.DrawLine(transform.position, NavigationBezier(), Color.red);
+			Debug.DrawLine(transform.position, NavigationBezier(), Color.green);
 
 			float halfDistance = (transform.position - target.position).magnitude / 2f;
 
@@ -171,7 +179,7 @@ public class VehicleController : MonoBehaviour
 			{
 				float sign = Mathf.Sign(Vector3.Dot(transform.forward, targetNode.transform.position - transform.position));
 
-				Gizmos.color = Color.red;
+				Gizmos.color = Color.green;
 				Gizmos.DrawSphere(NavigationBezier(), 0.5f);
 
 				Vector3 nextVector = (targetNode.next.transform.position - targetNode.transform.position).normalized;
