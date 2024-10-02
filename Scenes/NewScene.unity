@@ -140,7 +140,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &4945567
 Transform:
   m_ObjectHideFlags: 0
@@ -350,7 +350,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &127450307
 Transform:
   m_ObjectHideFlags: 0
@@ -359,13 +359,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 127450306}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.031247599, z: -0, w: 0.99951166}
-  m_LocalPosition: {x: -5.99, y: 4.06, z: -19.63}
+  m_LocalRotation: {x: -0, y: 0.23510592, z: -0, w: 0.9719698}
+  m_LocalPosition: {x: -7.17, y: 4.06, z: -22.92}
   m_LocalScale: {x: 10, y: 10, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1448342784}
-  m_LocalEulerAnglesHint: {x: 0, y: 3.581, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 27.196, z: 0}
 --- !u!65 &127450308
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -455,7 +455,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &137272991
 Transform:
   m_ObjectHideFlags: 0
@@ -560,7 +560,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &149665171
 Transform:
   m_ObjectHideFlags: 0
@@ -679,7 +679,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sphereCollider: {fileID: 158284124}
   resolution: 16
-  width: 4
+  width: 1
   next: {fileID: 780013110}
 --- !u!135 &158284124
 SphereCollider:
@@ -895,7 +895,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sphereCollider: {fileID: 250729245}
   resolution: 16
-  width: 4
+  width: 1
   next: {fileID: 1238749726}
 --- !u!135 &250729245
 SphereCollider:
@@ -1072,7 +1072,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sphereCollider: {fileID: 338938723}
   resolution: 16
-  width: 4
+  width: 1
   next: {fileID: 1566466063}
 --- !u!135 &338938723
 SphereCollider:
@@ -1128,7 +1128,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &396499353
 Transform:
   m_ObjectHideFlags: 0
@@ -1138,8 +1138,8 @@ Transform:
   m_GameObject: {fileID: 396499352}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.37751427, z: -0, w: 0.9260038}
-  m_LocalPosition: {x: 2.9, y: 4.06, z: 15.34}
-  m_LocalScale: {x: 16, y: 10, z: 16}
+  m_LocalPosition: {x: 10.65, y: 4.06, z: 29.03}
+  m_LocalScale: {x: 2.1667428, y: 10, z: 16}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1448342784}
@@ -1425,37 +1425,6 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
---- !u!1 &681385506
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 681385507}
-  m_Layer: 0
-  m_Name: Start
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &681385507
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 681385506}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -41.36, y: 0, z: 7.5}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1577920870}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &710641393
 GameObject:
   m_ObjectHideFlags: 0
@@ -1829,7 +1798,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sphereCollider: {fileID: 780013111}
   resolution: 16
-  width: 4
+  width: 1
   next: {fileID: 338938722}
 --- !u!135 &780013111
 SphereCollider:
@@ -2084,7 +2053,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &902820303
 Transform:
   m_ObjectHideFlags: 0
@@ -2171,37 +2140,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 902820302}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1 &912886149
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 912886150}
-  m_Layer: 0
-  m_Name: End
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &912886150
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 912886149}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -20.07, y: 0, z: -41.48}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1577920870}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &946036986
 GameObject:
   m_ObjectHideFlags: 0
@@ -2326,7 +2264,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1025374090
 Transform:
   m_ObjectHideFlags: 0
@@ -2644,7 +2582,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sphereCollider: {fileID: 1238749727}
   resolution: 16
-  width: 4
+  width: 1
   next: {fileID: 158284123}
 --- !u!135 &1238749727
 SphereCollider:
@@ -2815,7 +2753,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 234623120214631470, guid: e4288f974f9adf449b729ca0bccf2080, type: 3}
       propertyPath: steeringSmoothness
-      value: 0.25
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 4914507343408033347, guid: e4288f974f9adf449b729ca0bccf2080, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3202,7 +3140,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1547573855
 Transform:
   m_ObjectHideFlags: 0
@@ -3212,7 +3150,7 @@ Transform:
   m_GameObject: {fileID: 1547573854}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.91833854, z: -0, w: 0.39579594}
-  m_LocalPosition: {x: -15.3, y: 4.06, z: 30.8}
+  m_LocalPosition: {x: -17.77, y: 4.06, z: 33.13}
   m_LocalScale: {x: 20, y: 10, z: 8}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3336,7 +3274,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sphereCollider: {fileID: 1561184833}
   resolution: 16
-  width: 4
+  width: 1
   next: {fileID: 250729244}
 --- !u!135 &1561184833
 SphereCollider:
@@ -3406,7 +3344,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sphereCollider: {fileID: 1566466064}
   resolution: 16
-  width: 4
+  width: 1
   next: {fileID: 1919636364}
 --- !u!135 &1566466064
 SphereCollider:
@@ -3544,7 +3482,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1577920870}
   - component: {fileID: 1577920869}
-  - component: {fileID: 1577920868}
   m_Layer: 0
   m_Name: VehicleNavMesh
   m_TagString: Untagged
@@ -3552,21 +3489,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1577920868
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1577920867}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 66eac669facf109458d9436aeb938271, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  startPos: {fileID: 681385507}
-  endPos: {fileID: 912886150}
-  distance: 5.8
 --- !u!114 &1577920869
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3594,7 +3516,7 @@ MonoBehaviour:
   m_OverrideTileSize: 0
   m_TileSize: 256
   m_OverrideVoxelSize: 0
-  m_VoxelSize: 0.6666667
+  m_VoxelSize: 0.5
   m_MinRegionArea: 2
   m_NavMeshData: {fileID: 23800000, guid: 1d4575b154c100f4facb187655695a43, type: 2}
   m_BuildHeightMesh: 0
@@ -3610,9 +3532,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 681385507}
-  - {fileID: 912886150}
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1582731102
@@ -4055,7 +3975,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1810212316
 Transform:
   m_ObjectHideFlags: 0
@@ -4294,7 +4214,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sphereCollider: {fileID: 1919636365}
   resolution: 16
-  width: 4
+  width: 1
   next: {fileID: 1561184832}
 --- !u!135 &1919636365
 SphereCollider:
@@ -4335,7 +4255,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1954413265
 Transform:
   m_ObjectHideFlags: 0
@@ -4954,7 +4874,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!65 &2113429383
 BoxCollider:
   m_ObjectHideFlags: 0

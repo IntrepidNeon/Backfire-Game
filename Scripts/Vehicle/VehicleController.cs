@@ -160,7 +160,7 @@ public class VehicleController : MonoBehaviour
 	{
 		if (_rb)
 		{
-			Handles.Label(transform.position, "" + _rb.velocity.magnitude);
+			Handles.Label(transform.position, "" + (int)(_rb.velocity.magnitude*3.6f));
 		}
 		
 

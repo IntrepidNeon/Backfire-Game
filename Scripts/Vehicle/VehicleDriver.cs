@@ -1,8 +1,10 @@
 using Palmmedia.ReportGenerator.Core.CodeAnalysis;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -16,37 +18,17 @@ public class VehicleDriver : MonoBehaviour
 	private Vector3 _steerTarget;
 	private float calculatedSteerAngle;
 
-	private float recklessness;
-
-	private NavNode.TargetInfo _targetInfo;
-
 	Vector3 debugDesire = new();
+	Vector3 navMeshTarget = new();
+	NavMeshPath path;
 
-	private RaycastHit forwardHitInfo, leftHitInfo, rightHitInfo;
-	private bool forwardObstacle, leftObstacle, rightObstacle;
-
-	private float
-		_steeringClampMax,
-		_steeringClampMin;
-
-	public Vector3 SteeringForward
-	{
-		get
-		{
-			return Quaternion.AngleAxis(calculatedSteerAngle, Vector3.up) * transform.rotation * Vector3.forward;
-		}
-	}
+	private RaycastHit targetHitInfo;
+	private bool targetObstacle;
 
 	private void Awake()
 	{
 		vc = GetComponent<VehicleController>();
 		_rb = GetComponent<Rigidbody>();
-
-		NavNode targetNode = vc.target.GetComponent<NavNode>();
-		if (targetNode)
-		{
-			_targetInfo = new NavNode.TargetInfo { position = targetNode.transform.position, node = targetNode, forward = true, index = 0 };
-		}
 	}
 	private void FixedUpdate()
 	{
@@ -55,8 +37,6 @@ public class VehicleDriver : MonoBehaviour
 
 	private void Navigate()
 	{
-		_steeringClampMin = -vc.maxSteerAngle;
-		_steeringClampMax = vc.maxSteerAngle;
 
 		if (!vc.target)
 		{
@@ -68,23 +48,18 @@ public class VehicleDriver : MonoBehaviour
 		vc.throttle = 1f;
 		vc.brake = 0f;
 
-		//_steerTarget = NodeSteeringTarget();
-		//calculatedSteerAngle = SteerAngleToTarget(_steerTarget - transform.position);
-
-		//if ((transform.position - _targetInfo.position).magnitude < 4f) _targetInfo = _targetInfo.node.AdvanceTarget(_targetInfo);
-
 		NavNode targetNode = vc.target.GetComponent<NavNode>();
 		if (targetNode)
 		{
 			float velocityMagnitude = _rb.velocity.magnitude;
-			float mag = Mathf.Max(velocityMagnitude / 2f, targetNode.minPointDist + 1f);
+			float mag = Mathf.Max(velocityMagnitude / 2f, targetNode.maxPointDist);
 
 			Vector3 desireVector =
-				(transform.forward + 1.1f * (targetNode.next.transform.position - transform.position).normalized).normalized * mag;
+				(transform.forward + 1.001f * (targetNode.transform.position - transform.position).normalized).normalized * mag;
 
 			debugDesire = desireVector;
 
-			if ((transform.position - targetNode.next.transform.position).magnitude < mag)
+			if ((transform.position - targetNode.transform.position).magnitude < mag)
 			{
 				vc.target = targetNode.next.transform;
 			}
@@ -92,7 +67,7 @@ public class VehicleDriver : MonoBehaviour
 			float minDist = Mathf.Infinity;
 			SplineTools.SamplePoint closestPoint = new();
 
-			foreach (SplineTools.SamplePoint point in targetNode.subPoints)
+			foreach (SplineTools.SamplePoint point in targetNode.prev.subPoints)
 			{
 				float dist = (point.position - (transform.position + desireVector)).magnitude;
 				if (dist < minDist)
@@ -101,27 +76,70 @@ public class VehicleDriver : MonoBehaviour
 					closestPoint = point;
 				}
 			}
+			closestPoint = SplineTools.ClosestSampleLerped(targetNode.prev.subPoints, transform.position + desireVector);
 			_steerTarget = closestPoint.position;
 
 			float maxVelocity = closestPoint.forward.magnitude / 3;
 			if (velocityMagnitude > maxVelocity)
 			{
 				vc.throttle = 0f;
-				vc.brake = velocityMagnitude - maxVelocity;
+				vc.brake = 1f;
 			}
 		}
 
 
 		calculatedSteerAngle = SteerAngleToTarget(_steerTarget - transform.position);
-
-		BasicObstacleAvoidance();
+		NavMeshObstacleAvoidance();
 
 		vc.desiredSteerAngle = calculatedSteerAngle;
 	}
 
 	public float NormalizeAngle(float angle)
 	{
-		return angle > 180 ? angle - 360 : angle;
+		angle %= 360;
+
+
+		if (angle > 180)
+		{
+			angle -= 360;
+		}
+		else if (angle < -180)
+		{
+			angle += 360;
+		}
+
+		return angle;
+	}
+
+	private SplineTools.SamplePoint NavNodePathTarget(NavNode targetNode)
+	{
+		if (targetNode && targetNode.prev)
+		{
+			float velocityMagnitude = _rb.velocity.magnitude;
+			float seekMagnitude = Mathf.Max(velocityMagnitude / 2f, targetNode.maxPointDist);
+
+			Vector3 desireVector =
+				(transform.forward + 1.001f * (targetNode.transform.position - transform.position).normalized).normalized * seekMagnitude;
+
+			if ((transform.position - targetNode.transform.position).magnitude < seekMagnitude)
+			{
+				vc.target = targetNode.next.transform;
+			}
+
+			float minDist = Mathf.Infinity;
+			SplineTools.SamplePoint closestPoint = new();
+			foreach (SplineTools.SamplePoint point in targetNode.prev.subPoints)
+			{
+				float dist = (point.position - (transform.position + desireVector)).magnitude;
+				if (dist < minDist)
+				{
+					minDist = dist;
+					closestPoint = point;
+				}
+			}
+			return closestPoint;
+		}
+		return new SplineTools.SamplePoint { position = targetNode.transform.position, forward = new(), radius = 0f };
 	}
 
 	private float SteerAngleToTarget(Vector3 dir)
@@ -132,6 +150,136 @@ public class VehicleDriver : MonoBehaviour
 		return Mathf.Clamp(NormalizeAngle(localWishDir.eulerAngles.y), -vc.maxSteerAngle, vc.maxSteerAngle);
 	}
 
+	private void NavMeshObstacleAvoidance()
+	{
+		float velocityMagnitude = _rb.velocity.magnitude;
+		Vector3 forwardHalfExtents = new(0.75f, 0.05f, 0.05f);
+		targetObstacle = ObstacleBoxCast(
+			transform.position,
+			forwardHalfExtents,
+			Quaternion.AngleAxis(calculatedSteerAngle, transform.up) * transform.forward,
+			transform.rotation,
+			Mathf.Clamp(3 * velocityMagnitude + 1.5f, 0f, (vc.target.position - transform.position).magnitude),
+			out targetHitInfo);
+
+		if (targetObstacle)
+		{
+			path = new();
+			if (NavMesh.CalculatePath(transform.position, vc.target.position, NavMesh.AllAreas, path))
+			{
+				float targetDist = 4f;
+				Vector3 targetPoint = Vector3.zero;
+				for (int i = 0; i < path.corners.Length - 1; i++)
+				{
+					float segmentLength = (path.corners[i + 1] - path.corners[i]).magnitude;
+					Debug.Log(segmentLength);
+					if (segmentLength > targetDist)
+					{
+						targetPoint = Vector3.Lerp(path.corners[i], path.corners[i + 1], targetDist / segmentLength);
+						break;
+					}
+					else
+					{
+						targetDist -= segmentLength;
+					}
+				}
+				calculatedSteerAngle = SteerAngleToTarget(targetPoint - transform.position);
+				navMeshTarget = targetPoint;
+			}
+		}
+	}
+
+	public bool ObstacleBoxCast(Vector3 center, Vector3 halfExtents, Vector3 direction, Quaternion orientation, float distance, out RaycastHit hitInfo)
+	{
+		hitInfo = default;
+		bool obstacleHit = false;
+
+		RaycastHit[] hits = Physics.BoxCastAll(center, halfExtents, direction, orientation, distance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+
+		float maxDistance = Mathf.Infinity;
+
+		foreach (RaycastHit hit in hits)
+		{
+			if (hit.point == Vector3.zero ||
+				new Vector2(hit.normal.x, hit.normal.z).magnitude < hit.normal.y || // If the normal points more upward than sideways, it probably isnt relevant
+				hit.transform.IsChildOf(transform.root))
+				continue;
+
+			if (hit.distance < maxDistance)
+			{
+				maxDistance = hit.distance;
+				obstacleHit = true;
+				hitInfo = hit;
+			}
+		}
+
+		return obstacleHit;
+
+	}
+
+	private void OnDrawGizmos()
+	{
+		//VisualizeSteering();
+
+		Debug.DrawLine(transform.position, transform.position + debugDesire, Color.red);
+
+		Color orange = new(1f, 0.5f, 0f);
+
+		if (_rb)
+		{
+			//Debug.DrawLine(transform.position, transform.position + transform.forward * _rb.velocity.magnitude, Color.magenta);
+
+
+			if (targetObstacle)
+			{
+				Gizmos.color = Color.red;
+				Gizmos.DrawSphere(navMeshTarget, 0.25f);
+				if (path != null)
+				{
+					for (int i = 0; i < path.corners.Length - 1; i++)
+					{
+						Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.green);
+						Handles.Label(path.corners[i], "" + i);
+
+					}
+				}
+				Gizmos.color = orange;
+
+				Debug.DrawLine(targetHitInfo.point, transform.position, orange);
+				Debug.DrawLine(targetHitInfo.point, targetHitInfo.point + targetHitInfo.normal, orange);
+				Gizmos.DrawSphere(targetHitInfo.point, 0.25f);
+			}
+		}
+
+
+		Gizmos.color = Color.red;
+		Gizmos.DrawSphere(_steerTarget, 0.25f);
+
+	}
+}
+
+
+//CODE GRAVEYARD
+/*void VisualizeSteering()
+		{
+			Debug.DrawLine(transform.position, transform.position + Quaternion.AngleAxis(_steeringClampMin, transform.up) * transform.forward * 4f, Color.blue);
+			Debug.DrawLine(transform.position, transform.position + Quaternion.AngleAxis(_steeringClampMax, transform.up) * transform.forward * 4f, Color.red);
+		}*/
+
+/*if (leftObstacle)
+			{
+				Debug.DrawLine(leftHitInfo.point, transform.position, Color.blue);
+				Debug.DrawLine(leftHitInfo.point, leftHitInfo.point + leftHitInfo.normal, orange);
+				Gizmos.DrawSphere(leftHitInfo.point, 0.25f);
+			}
+			if (rightObstacle)
+			{
+				Debug.DrawLine(rightHitInfo.point, transform.position, Color.red);
+				Debug.DrawLine(rightHitInfo.point, rightHitInfo.point + rightHitInfo.normal, orange);
+				Gizmos.DrawSphere(rightHitInfo.point, 0.25f);
+			}*/
+
+/*
 	private void BasicObstacleAvoidance()
 	{
 
@@ -208,108 +356,7 @@ public class VehicleDriver : MonoBehaviour
 
 		}
 		calculatedSteerAngle = Mathf.Clamp(calculatedSteerAngle, _steeringClampMin, _steeringClampMax);
-	}
-
-	public bool ObstacleBoxCast(Vector3 center, Vector3 halfExtents, Vector3 direction, Quaternion orientation, float distance, out RaycastHit hitInfo)
-	{
-		hitInfo = default;
-		bool obstacleHit = false;
-
-		RaycastHit[] hits = Physics.BoxCastAll(center, halfExtents, direction, orientation, distance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
-
-		float maxDistance = Mathf.Infinity;
-
-		foreach (RaycastHit hit in hits)
-		{
-			if (hit.point == Vector3.zero ||
-				new Vector2(hit.normal.x, hit.normal.z).magnitude < hit.normal.y || // If the normal points more upward than sideways, it probably isnt relevant
-				hit.transform.IsChildOf(transform.root))
-				continue;
-
-			if (hit.distance < maxDistance)
-			{
-				maxDistance = hit.distance;
-				obstacleHit = true;
-				hitInfo = hit;
-			}
-		}
-
-		return obstacleHit;
-
-	}
-
-
-
-	private Vector3 NodeSteeringTarget()
-	{
-		NavNode targetNode = vc.target.GetComponent<NavNode>();
-
-		Vector3 nextVector, halfVector;
-
-		float position;
-
-		if (targetNode && targetNode.next)
-		{
-			nextVector = (targetNode.next.transform.position - targetNode.transform.position).normalized;
-
-			halfVector = (transform.forward + nextVector).normalized;
-
-			position = (transform.position - vc.target.position).magnitude - _rb.velocity.magnitude;
-
-			return vc.target.position - halfVector * Mathf.Clamp(position, -16f, 16f);
-		}
-
-		else
-		{
-			return vc.target.position;
-		}
-	}
-
-	private void OnDrawGizmos()
-	{
-		//VisualizeSteering();
-
-		Debug.DrawLine(transform.position, transform.position + debugDesire, Color.red);
-
-		Color orange = new(1f, 0.5f, 0f);
-
-		if (_rb)
-		{
-			Debug.DrawLine(transform.position, transform.position + transform.forward * _rb.velocity.magnitude, Color.magenta);
-
-			Gizmos.color = orange;
-			if (forwardObstacle)
-			{
-				Debug.DrawLine(forwardHitInfo.point, transform.position, orange);
-				Debug.DrawLine(forwardHitInfo.point, forwardHitInfo.point + forwardHitInfo.normal, orange);
-				Gizmos.DrawSphere(forwardHitInfo.point, 0.25f);
-			}
-			if (leftObstacle)
-			{
-				Debug.DrawLine(leftHitInfo.point, transform.position, Color.blue);
-				Debug.DrawLine(leftHitInfo.point, leftHitInfo.point + leftHitInfo.normal, orange);
-				Gizmos.DrawSphere(leftHitInfo.point, 0.25f);
-			}
-			if (rightObstacle)
-			{
-				Debug.DrawLine(rightHitInfo.point, transform.position, Color.red);
-				Debug.DrawLine(rightHitInfo.point, rightHitInfo.point + rightHitInfo.normal, orange);
-				Gizmos.DrawSphere(rightHitInfo.point, 0.25f);
-			}
-		}
-		void VisualizeSteering()
-		{
-			Debug.DrawLine(transform.position, transform.position + Quaternion.AngleAxis(_steeringClampMin, transform.up) * transform.forward * 4f, Color.blue);
-			Debug.DrawLine(transform.position, transform.position + Quaternion.AngleAxis(_steeringClampMax, transform.up) * transform.forward * 4f, Color.red);
-		}
-
-		Gizmos.color = Color.red;
-		Gizmos.DrawSphere(_steerTarget, 0.25f);
-	}
-}
-
-
-//CODE GRAVEYARD
+	}*/
 
 /*if (targetObstacle || forwardObstacle)
 		{
@@ -500,3 +547,29 @@ private void OnTriggerExit(Collider other)
 		other.GetComponentInParent<EnemyVC>().VC.target = transform;
 	}
 }*/
+
+/*
+private Vector3 NodeSteeringTarget()
+	{
+		NavNode targetNode = vc.target.GetComponent<NavNode>();
+
+		Vector3 nextVector, halfVector;
+
+		float position;
+
+		if (targetNode && targetNode.next)
+		{
+			nextVector = (targetNode.next.transform.position - targetNode.transform.position).normalized;
+
+			halfVector = (transform.forward + nextVector).normalized;
+
+			position = (transform.position - vc.target.position).magnitude - _rb.velocity.magnitude;
+
+			return vc.target.position - halfVector * Mathf.Clamp(position, -16f, 16f);
+		}
+
+		else
+		{
+			return vc.target.position;
+		}
+	}*/

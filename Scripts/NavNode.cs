@@ -25,7 +25,7 @@ public class NavNode : MonoBehaviour
 	}
 
 	[System.NonSerialized]
-	public float minPointDist;
+	public float maxPointDist;
 
 	private void OnValidate()
 	{
@@ -162,15 +162,15 @@ public class NavNode : MonoBehaviour
 			};
 		}
 
-		float minDist = Mathf.Infinity;
+		float maxDist = 0f;
 
 		for (int i = 0; i < subPoints.Length - 1; i++)
 		{
 			float dist = (subPoints[i + 1].position - subPoints[i].position).magnitude;
-			if (dist < minDist) minDist = dist;
+			if (dist > maxDist) maxDist = dist;
 		}
 
-		minPointDist = minDist;
+		maxPointDist = maxDist;
 
 	}
 
