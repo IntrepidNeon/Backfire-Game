@@ -30,14 +30,13 @@ public class VehicleController : MonoBehaviour
 	public float steeringSmoothness = 0.5f;
 
 	internal float desiredSteerAngle;
-	internal float desireAngle;
 
 	private Rigidbody _rb;
 	private float _steerAngle;
 
-	public Transform target;
-
 	public AxleInfo[] axleInfos;
+
+	public Vector3 Velocity { get { return _rb.velocity; } }
 
 	private void Awake()
 	{
@@ -56,8 +55,6 @@ public class VehicleController : MonoBehaviour
 	{
 		int motorCount = axleInfos.Count(axleInfo => axleInfo.motor);
 
-		//throttle = Mathf.Max(Mathf.Clamp01((45 - Mathf.Abs(desireAngle)) / 45), 8 - _rb.velocity.magnitude);
-		//throttle = Mathf.Clamp01(throttle);
 		brake = Mathf.Clamp01(brake);
 
 		float angleDiff = desiredSteerAngle - _steerAngle;
@@ -114,57 +111,34 @@ public class VehicleController : MonoBehaviour
 		return angle > 180 ? angle - 360 : angle;
 	}
 
-	public static Vector3 EvaluateBezier(Vector3 A, Vector3 B, Vector3 C, Vector3 D, float t)
-	{
-		Vector3
-			AB = Vector3.Lerp(A, B, t),
-			BC = Vector3.Lerp(B, C, t),
-			CD = Vector3.Lerp(C, D, t),
-
-			ABC = Vector3.Lerp(AB, BC, t),
-			BCD = Vector3.Lerp(BC, CD, t);
-
-		return Vector3.Lerp(ABC, BCD, t);
-	}
-	internal void Navigate()
-	{
-		if (!target) return;
-		Quaternion worldWishDir, localWishDir;
-		worldWishDir = Quaternion.LookRotation(NavigationBezier() - transform.position);
-		localWishDir = worldWishDir * Quaternion.Inverse(transform.rotation);
-		desireAngle = NormalizeAngle(localWishDir.eulerAngles.y);
-		desiredSteerAngle = Mathf.Clamp(desireAngle, -maxSteerAngle, maxSteerAngle);
-	}
-
-	public Vector3 NavigationBezier()
-	{
-		NavNode targetNode = target.GetComponent<NavNode>();
-
-		if (targetNode && _rb)
-		{
-			float sign = Mathf.Sign(Vector3.Dot(transform.forward, targetNode.transform.position - transform.position));
-
-			Vector3 nextVector = (targetNode.next.transform.position - targetNode.transform.position).normalized;
-
-			Vector3 halfVector = (transform.forward + nextVector).normalized;
-
-			float offset = (transform.position - target.position).magnitude - _rb.velocity.magnitude - targetNode.sphereCollider.radius;
-
-			return target.position - halfVector * Mathf.Clamp(offset, -16f, 16f);
-		}
-		return Vector3.zero;
-
-	}
-
 	void OnDrawGizmos()
 	{
 		if (_rb)
 		{
-			Handles.Label(transform.position, "" + (int)(_rb.velocity.magnitude*3.6f));
+			Handles.Label(transform.position, "" + (int)(_rb.velocity.magnitude * 3.6f));
 		}
-		
+	}
+}
 
-		return;
+[System.Serializable]
+public class AxleInfo
+{
+	public Wheel leftWheel, rightWheel;
+	public bool motor, steer, park;
+
+	public float AverageRPM { get { return (leftWheel.collider.rpm + rightWheel.collider.rpm) / 2f; } }
+}
+[System.Serializable]
+public class Wheel
+{
+	public WheelCollider collider;
+	public GameObject mesh;
+}
+
+//CODE GRAVEYARD
+
+/*
+return;
 		if (target)
 		{
 			Debug.DrawLine(transform.position, NavigationBezier(), Color.green);
@@ -195,20 +169,38 @@ public class VehicleController : MonoBehaviour
 
 
 		}
+*/
+
+/*
+ public Vector3 NavigationBezier()
+	{
+		NavNode targetNode = target.GetComponent<NavNode>();
+
+		if (targetNode && _rb)
+		{
+			float sign = Mathf.Sign(Vector3.Dot(transform.forward, targetNode.transform.position - transform.position));
+
+			Vector3 nextVector = (targetNode.next.transform.position - targetNode.transform.position).normalized;
+
+			Vector3 halfVector = (transform.forward + nextVector).normalized;
+
+			float offset = (transform.position - target.position).magnitude - _rb.velocity.magnitude - targetNode.sphereCollider.radius;
+
+			return target.position - halfVector * Mathf.Clamp(offset, -16f, 16f);
+		}
+		return Vector3.zero;
+
 	}
-}
+*/
 
-[System.Serializable]
-public class AxleInfo
-{
-	public Wheel leftWheel, rightWheel;
-	public bool motor, steer, park;
-
-	public float AverageRPM { get { return (leftWheel.collider.rpm + rightWheel.collider.rpm) / 2f; } }
-}
-[System.Serializable]
-public class Wheel
-{
-	public WheelCollider collider;
-	public GameObject mesh;
-}
+/*
+ internal void Navigate()
+	{
+		if (!target) return;
+		Quaternion worldWishDir, localWishDir;
+		worldWishDir = Quaternion.LookRotation(NavigationBezier() - transform.position);
+		localWishDir = worldWishDir * Quaternion.Inverse(transform.rotation);
+		desireAngle = NormalizeAngle(localWishDir.eulerAngles.y);
+		desiredSteerAngle = Mathf.Clamp(desireAngle, -maxSteerAngle, maxSteerAngle);
+	}
+*/

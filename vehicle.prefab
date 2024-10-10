@@ -741,7 +741,6 @@ MonoBehaviour:
   park: 0
   maxSteerAngle: 30
   steeringSmoothness: 0.5
-  target: {fileID: 0}
   axleInfos:
   - leftWheel:
       collider: {fileID: 3793003112221239969}

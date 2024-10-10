@@ -1,12 +1,14 @@
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 [RequireComponent(typeof(SphereCollider))]
 public class NavNode : MonoBehaviour
 {
 	public SphereCollider sphereCollider;
 
+	public bool autoResolution = false;
 	public int resolution = 16;
 	public float width = 1f;
 
@@ -14,15 +16,7 @@ public class NavNode : MonoBehaviour
 	public NavNode prev;
 	public NavNode next;
 
-	public SplineTools.SamplePoint[] subPoints = new SplineTools.SamplePoint[0];
-
-	public struct TargetInfo
-	{
-		public Vector3 position;    // Target Location
-		public NavNode node;        // Target Node
-		public bool forward;        // Direction of travel
-		public int index;           // Index of the current sub point
-	}
+	public SplineSample headSample = new();
 
 	[System.NonSerialized]
 	public float maxPointDist;
@@ -31,52 +25,20 @@ public class NavNode : MonoBehaviour
 	{
 		sphereCollider = GetComponent<SphereCollider>();
 		sphereCollider.isTrigger = true;
-		next.prev = this;
+		sphereCollider.radius = width / 2f;
+		if (next) next.prev = this;
+		if (prev) prev.ValidatePoints();
 		ValidatePoints();
 	}
 	private void OnTriggerEnter(Collider other)
 	{
-		/*VehicleController v = other.GetComponentInParent<VehicleController>();
-		if (v && v.target == transform)
-		{
-			v.target = next.transform;
-		}*/
+		VehicleDriver driver = other.transform.root.GetComponentInChildren<VehicleDriver>();
+
+		if (driver && driver.target == transform) { driver.target = next.transform; Debug.Log("driver collision"); }
 	}
-	/*public TargetInfo AdvanceTarget(TargetInfo currentInfo)
-	{
-		Vector3 newPosition;
-		NavNode newNode = currentInfo.node;
-		int newIndex;
 
-		if (currentInfo.forward)
-		{
-			newIndex = currentInfo.index + 1;
-
-			if (newIndex > newNode.subPoints.Length - 1)
-			{
-				newNode = next;
-				newIndex = 1;
-
-			}
-		}
-		else
-		{
-			newIndex = currentInfo.index - 1;
-
-			if (newIndex < 1)
-			{
-				newNode = prev;
-				newIndex = prev.subPoints.Length - 1;
-			}
-
-		}
-		newPosition = newNode.subPoints[newIndex];
-
-		return new TargetInfo { position = newPosition, node = newNode, forward = currentInfo.forward, index = newIndex };
-	}*/
 	void OnDrawGizmos()
 	{
-		ValidatePoints();
 		Gizmos.color = Color.magenta;
 		NavNode node;
 		Vector3 pos = transform.position;
@@ -93,12 +55,125 @@ public class NavNode : MonoBehaviour
 					//Handles.DrawLine(pos, node.next.transform.position);
 				}
 			}
-			//Vector3 prevPoint = transform.position;
 
 			Vector3
 				prevRight = new(),
 				prevLeft = new();
-			for (int i = 0; i < subPoints.Length; i++)
+
+
+
+			SplineSample current = headSample;
+
+			for (int i = 0; i <= resolution; i++)
+			{
+				if (current == null)
+				{
+					break;
+				}
+				Vector3
+					pointRight = Vector3.Cross(Vector3.up, current.forward.normalized),
+					currentLeft = current.position - pointRight * current.radius,
+					currentRight = current.position + pointRight * current.radius;
+
+				float x = Mathf.Clamp01((current.forward.magnitude - 12f) / 16f);
+				Color weightedColor = new Color(-2 * Mathf.Abs(x) + 1, -2 * Mathf.Abs(x - 0.5f) + 1, -2 * Mathf.Abs(x - 1f) + 1);
+
+				if (i > 0)
+				{
+					Debug.DrawLine(prevRight, currentRight, weightedColor);
+					Debug.DrawLine(prevLeft, currentLeft, weightedColor);
+
+					Debug.DrawLine(prevRight, current.position, weightedColor);
+					Debug.DrawLine(prevLeft, current.position, weightedColor);
+				}
+				current = current.next;
+				prevRight = currentRight;
+				prevLeft = currentLeft;
+			}
+			//Handles.DrawWireDisc(pos, Vector3.up, node.sphereCollider.radius);
+			Gizmos.DrawSphere(transform.position, node.sphereCollider.radius / 8);
+
+			Handles.Label(pos, "  " + transform.parent.name + "." + transform.name);
+
+		}
+	}
+
+
+
+	public void ValidatePoints()
+	{
+		SplineSample oldSample = GetSample(0f);
+
+		headSample.position = oldSample.position;
+		headSample.forward = oldSample.forward;
+		headSample.radius = oldSample.radius;
+
+		if (!prev) headSample.prev = null;
+		if (!next || resolution < 1) { headSample.next = null; return; }
+
+		oldSample = headSample;
+
+		for (int i = 1; i < resolution; i++)
+		{
+			float t = (float)i / (resolution);
+			SplineSample newSample = GetSample(t);
+			oldSample.next = newSample;
+			newSample.prev = oldSample;
+			oldSample = oldSample.next;
+		}
+		oldSample.next = next.headSample;
+	}
+	public SplineSample GetSample(float t)
+	{
+		if (!next) { return new SplineSample { position = transform.position }; }
+
+		bool isFirst = !prev;
+		bool isLast = !next.next;
+
+		Vector3
+			p0 = isFirst ? 2 * transform.position - next.transform.position : prev.transform.position,
+			p1 = transform.position,
+			p2 = next.transform.position,
+			p3 = isLast ? 2 * next.transform.position - transform.position : next.next.transform.position;
+
+		return new SplineSample
+		{
+			position = SplineTools.CatmullRomPosition(t, p0, p1, p2, p3),
+			forward = SplineTools.CatmullRomDirection(t, p0, p1, p2, p3),
+			radius = Mathf.Lerp(width / 2f, next.width / 2f, t)
+		};
+	}
+
+
+}
+
+//CODE GRAVEYARD
+
+//Array Based Points
+/*
+ * public SplineTools.SamplePoint GetSample(float t)
+	{
+		if (!next) { return new(); }
+
+		bool isFirst = !prev;
+		bool isLast = !next.next;
+
+		Vector3
+			p0 = isFirst ? 2 * transform.position - next.transform.position : prev.transform.position,
+			p1 = transform.position,
+			p2 = next.transform.position,
+			p3 = isLast ? 2 * next.transform.position - transform.position : next.next.transform.position;
+
+		return new SplineTools.SamplePoint
+		{
+			position = SplineTools.CatmullRomPosition(t, p0, p1, p2, p3),
+			forward = SplineTools.CatmullRomDirection(t, p0, p1, p2, p3),
+			radius = Mathf.Lerp(width / 2f, next.width / 2f, t)
+		};
+	}
+ public SplineTools.SamplePoint[] subPoints = new SplineTools.SamplePoint[0];
+
+for (int i = 0; i < subPoints.Length; i++)
 			{
 				Vector3
 					pointRight = Vector3.Cross(Vector3.up, subPoints[i].forward.normalized),
@@ -120,46 +195,23 @@ public class NavNode : MonoBehaviour
 				prevRight = currentRight;
 				prevLeft = currentLeft;
 			}
-			//Handles.DrawWireDisc(pos, Vector3.up, node.sphereCollider.radius);
-			Gizmos.DrawSphere(transform.position, node.sphereCollider.radius / 8);
 
-			if (next) Handles.Label(pos, "  " + transform.parent.name + "." + transform.name + " : " + subPoints[0].forward.magnitude);
-			else Handles.Label(pos, "  " + transform.parent.name + "." + transform.name);
-
-		}
-	}
-
-	private void ValidatePoints()
+public void ValidatePoints()
 	{
-		if (!next)
+		if (autoResolution) resolution = (int)(next.transform.position - transform.position).magnitude;
+
+		if (!next || resolution < 1)
 		{
-			subPoints = new SplineTools.SamplePoint[0];
+			subPoints = new SplineTools.SamplePoint[1];
 			return;
 		}
 
-		bool isFirst = !prev;
-		bool isLast = !next.next;
-
 		subPoints = new SplineTools.SamplePoint[resolution + 1];
-
-		subPoints[0].position = transform.position;
-		subPoints[^1].position = next.transform.position;
-
-		Vector3
-			p0 = isFirst ? 2 * transform.position - next.transform.position : prev.transform.position,
-			p1 = transform.position,
-			p2 = next.transform.position,
-			p3 = isLast ? 2 * next.transform.position - transform.position : next.next.transform.position;
 
 		for (int i = 0; i < subPoints.Length; i++)
 		{
 			float t = (float)i / (subPoints.Length - 1);
-			subPoints[i] = new SplineTools.SamplePoint
-			{
-				position = SplineTools.CatmullRomPosition(t, p0, p1, p2, p3),
-				forward = SplineTools.CatmullRomDirection(t, p0, p1, p2, p3),
-				radius = Mathf.Lerp(width / 2f, next.width / 2f, t)
-			};
+			subPoints[i] = GetSample(t);
 		}
 
 		float maxDist = 0f;
@@ -169,10 +221,46 @@ public class NavNode : MonoBehaviour
 			float dist = (subPoints[i + 1].position - subPoints[i].position).magnitude;
 			if (dist > maxDist) maxDist = dist;
 		}
-
 		maxPointDist = maxDist;
+	}
+ */
+
+
+/*public TargetInfo AdvanceTarget(TargetInfo currentInfo)
+{
+	Vector3 newPosition;
+	NavNode newNode = currentInfo.node;
+	int newIndex;
+
+	if (currentInfo.forward)
+	{
+		newIndex = currentInfo.index + 1;
+
+		if (newIndex > newNode.subPoints.Length - 1)
+		{
+			newNode = next;
+			newIndex = 1;
+
+		}
+	}
+	else
+	{
+		newIndex = currentInfo.index - 1;
+
+		if (newIndex < 1)
+		{
+			newNode = prev;
+			newIndex = prev.subPoints.Length - 1;
+		}
 
 	}
+	newPosition = newNode.subPoints[newIndex];
 
+	return new TargetInfo { position = newPosition, node = newNode, forward = currentInfo.forward, index = newIndex };
+}*/
 
-}
+/*VehicleController v = other.GetComponentInParent<VehicleController>();
+		if (v && v.target == transform)
+		{
+			v.target = next.transform;
+		}*/

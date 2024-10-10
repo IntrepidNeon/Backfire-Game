@@ -11,21 +11,25 @@ using UnityEngine.AI;
 [RequireComponent(typeof(VehicleController))]
 public class VehicleDriver : MonoBehaviour
 {
-	public VehicleController vc;
+	protected VehicleController vc;
+	protected Rigidbody _rb;
 
-	private Rigidbody _rb;
+	public Transform target;
+	protected NavMeshPath navPath;
 
-	private Vector3 _steerTarget;
+	private Vector3 _steerTarget, _weightTarget;
 	private float calculatedSteerAngle;
 
 	Vector3 debugDesire = new();
 	Vector3 navMeshTarget = new();
-	NavMeshPath path;
+
+	private float offset, offsetVel;
+
 
 	private RaycastHit targetHitInfo;
 	private bool targetObstacle;
 
-	private void Awake()
+	protected void Awake()
 	{
 		vc = GetComponent<VehicleController>();
 		_rb = GetComponent<Rigidbody>();
@@ -33,12 +37,19 @@ public class VehicleDriver : MonoBehaviour
 	private void FixedUpdate()
 	{
 		Navigate();
+		OffsetFU();
+	}
+
+	private void OffsetFU()
+	{
+		offsetVel += Random.Range(-Time.fixedDeltaTime * Mathf.Clamp01(1 + offset), Time.fixedDeltaTime * Mathf.Clamp01(1 - offset));
+		offset = Mathf.Clamp(offset + offsetVel * Time.fixedDeltaTime, -1f, 1f);
 	}
 
 	private void Navigate()
 	{
 
-		if (!vc.target)
+		if (!target)
 		{
 			vc.throttle = 0;
 			vc.brake = Mathf.Clamp01(1 - _rb.velocity.magnitude / 20f);
@@ -48,50 +59,42 @@ public class VehicleDriver : MonoBehaviour
 		vc.throttle = 1f;
 		vc.brake = 0f;
 
-		NavNode targetNode = vc.target.GetComponent<NavNode>();
+		NavNode targetNode = target.GetComponent<NavNode>();
 		if (targetNode)
 		{
-			float velocityMagnitude = _rb.velocity.magnitude;
-			float mag = Mathf.Max(velocityMagnitude / 2f, targetNode.maxPointDist);
+			SplineSample[] samples = NodeTarget(targetNode);
 
-			Vector3 desireVector =
-				(transform.forward + 1.001f * (targetNode.transform.position - transform.position).normalized).normalized * mag;
+			_steerTarget = samples[1].position;
+			_weightTarget = samples[2].position;
 
-			debugDesire = desireVector;
 
-			if ((transform.position - targetNode.transform.position).magnitude < mag)
-			{
-				vc.target = targetNode.next.transform;
-			}
-
-			float minDist = Mathf.Infinity;
-			SplineTools.SamplePoint closestPoint = new();
-
-			foreach (SplineTools.SamplePoint point in targetNode.prev.subPoints)
-			{
-				float dist = (point.position - (transform.position + desireVector)).magnitude;
-				if (dist < minDist)
-				{
-					minDist = dist;
-					closestPoint = point;
-				}
-			}
-			closestPoint = SplineTools.ClosestSampleLerped(targetNode.prev.subPoints, transform.position + desireVector);
-			_steerTarget = closestPoint.position;
-
-			float maxVelocity = closestPoint.forward.magnitude / 3;
-			if (velocityMagnitude > maxVelocity)
+			float maxVelocity = samples[2].forward.magnitude / 3.6f;
+			if (_rb.velocity.magnitude > maxVelocity)
 			{
 				vc.throttle = 0f;
 				vc.brake = 1f;
 			}
 		}
-
-
 		calculatedSteerAngle = SteerAngleToTarget(_steerTarget - transform.position);
 		NavMeshObstacleAvoidance();
 
 		vc.desiredSteerAngle = calculatedSteerAngle;
+	}
+
+	public SplineSample[] NodeTarget(NavNode targetNode)
+	{
+		float halfVelocity = _rb.velocity.magnitude / 2f;
+
+		SplineSample[] samples = new SplineSample[3] { targetNode.headSample, targetNode.headSample, targetNode.headSample };
+		if (!targetNode.prev) return samples;
+
+		samples[0] = SplineSample.ClosestSampleLerped(targetNode.prev.headSample, transform.position, targetNode.prev.resolution + 1);
+		SplineSample projection = SplineSample.TraverseSampleLerped(samples[0], halfVelocity);
+		samples[1] = //Check if our projection is part of the current segment, we dont want to target a point beyond our current navNode
+			SplineSample.LinkedToSegment(projection, targetNode.prev.headSample, targetNode.prev.resolution + 1) ?
+			projection : targetNode.headSample;
+		samples[2] = SplineSample.TraverseSampleLerped(samples[1], halfVelocity);
+		return samples;
 	}
 
 	public float NormalizeAngle(float angle)
@@ -111,7 +114,133 @@ public class VehicleDriver : MonoBehaviour
 		return angle;
 	}
 
-	private SplineTools.SamplePoint NavNodePathTarget(NavNode targetNode)
+	public float SteerAngleToTarget(Vector3 dir)
+	{
+		Quaternion worldWishDir, localWishDir;
+		worldWishDir = Quaternion.LookRotation(dir);
+		localWishDir = worldWishDir * Quaternion.Inverse(transform.rotation);
+		return Mathf.Clamp(NormalizeAngle(localWishDir.eulerAngles.y), -vc.maxSteerAngle, vc.maxSteerAngle);
+	}
+
+	private void NavMeshObstacleAvoidance()
+	{
+		float velocityMagnitude = _rb.velocity.magnitude;
+		Vector3 forwardHalfExtents = new(0.75f, 0.05f, 0.05f);
+		targetObstacle = ObstacleBoxCast(
+			transform.position,
+			forwardHalfExtents,
+			Quaternion.AngleAxis(calculatedSteerAngle, transform.up) * transform.forward,
+			transform.rotation,
+			Mathf.Clamp(2 * velocityMagnitude + 1.5f, 0f, (target.position - transform.position).magnitude),
+			out targetHitInfo);
+
+		if (targetObstacle)
+		{
+			navPath = new();
+			if (NavMesh.CalculatePath(transform.position, target.position, NavMesh.AllAreas, navPath))
+			{
+				float targetDist = 4f;
+				Vector3 targetPoint = Vector3.zero;
+				for (int i = 0; i < navPath.corners.Length - 1; i++)
+				{
+					float segmentLength = (navPath.corners[i + 1] - navPath.corners[i]).magnitude;
+					Debug.Log(segmentLength);
+					if (segmentLength > targetDist)
+					{
+						targetPoint = Vector3.Lerp(navPath.corners[i], navPath.corners[i + 1], targetDist / segmentLength);
+						break;
+					}
+					else
+					{
+						targetDist -= segmentLength;
+					}
+				}
+				calculatedSteerAngle = SteerAngleToTarget(targetPoint - transform.position);
+				navMeshTarget = targetPoint;
+			}
+		}
+	}
+
+	public bool ObstacleBoxCast(Vector3 center, Vector3 halfExtents, Vector3 direction, Quaternion orientation, float distance, out RaycastHit hitInfo)
+	{
+		hitInfo = default;
+		bool obstacleHit = false;
+
+		RaycastHit[] hits = Physics.BoxCastAll(center, halfExtents, direction, orientation, distance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+
+		float maxDistance = Mathf.Infinity;
+
+		foreach (RaycastHit hit in hits)
+		{
+			if (hit.point == Vector3.zero || // This usually means the cast failed
+				new Vector2(hit.normal.x, hit.normal.z).magnitude < hit.normal.y || // If the normal points more upward than sideways, it probably isnt relevant
+				hit.transform.IsChildOf(transform.root)) // Stop hitting yourself
+				continue;
+
+			if (hit.distance < maxDistance)
+			{
+				maxDistance = hit.distance;
+				obstacleHit = true;
+				hitInfo = hit;
+			}
+		}
+		return obstacleHit;
+	}
+
+	public Vector3 GetPointAlongPolyLine(float distance, Vector3[] polyLine)
+	{
+		for (int i = 0; i < polyLine.Length - 1; i++)
+		{
+			float segmentLength = (polyLine[i + 1] - polyLine[i]).magnitude;
+			if (segmentLength > distance) return Vector3.Lerp(navPath.corners[i], navPath.corners[i + 1], distance / segmentLength);
+			else distance -= segmentLength;
+		}
+		return navPath.corners[^1];
+	}
+
+	private void OnDrawGizmos()
+	{
+		Debug.DrawLine(transform.position, transform.position + debugDesire, Color.red);
+
+		Color orange = new(1f, 0.5f, 0f);
+
+		if (_rb)
+		{
+			if (targetObstacle)
+			{
+				Gizmos.color = Color.red;
+				Gizmos.DrawSphere(navMeshTarget, 0.25f);
+				if (navPath != null)
+				{
+					for (int i = 0; i < navPath.corners.Length - 1; i++)
+					{
+						Debug.DrawLine(navPath.corners[i], navPath.corners[i + 1], Color.green);
+						Handles.Label(navPath.corners[i], "" + i);
+
+					}
+				}
+				Gizmos.color = orange;
+
+				Debug.DrawLine(targetHitInfo.point, transform.position, orange);
+				Debug.DrawLine(targetHitInfo.point, targetHitInfo.point + targetHitInfo.normal, orange);
+				Gizmos.DrawSphere(targetHitInfo.point, 0.25f);
+			}
+		}
+		Gizmos.color = Color.red;
+		Gizmos.DrawSphere(_steerTarget, 0.25f);
+		Gizmos.color = Color.blue;
+		Gizmos.DrawSphere(_weightTarget, 0.25f);
+
+		Gizmos.color = Color.green;
+		Gizmos.DrawSphere(Vector3.up + Vector3.right * offset, 0.25f);
+
+	}
+
+}
+
+
+//CODE GRAVEYARD
+/*private SplineTools.SamplePoint NavNodePathTarget(NavNode targetNode)
 	{
 		if (targetNode && targetNode.prev)
 		{
@@ -140,126 +269,7 @@ public class VehicleDriver : MonoBehaviour
 			return closestPoint;
 		}
 		return new SplineTools.SamplePoint { position = targetNode.transform.position, forward = new(), radius = 0f };
-	}
-
-	private float SteerAngleToTarget(Vector3 dir)
-	{
-		Quaternion worldWishDir, localWishDir;
-		worldWishDir = Quaternion.LookRotation(dir);
-		localWishDir = worldWishDir * Quaternion.Inverse(transform.rotation);
-		return Mathf.Clamp(NormalizeAngle(localWishDir.eulerAngles.y), -vc.maxSteerAngle, vc.maxSteerAngle);
-	}
-
-	private void NavMeshObstacleAvoidance()
-	{
-		float velocityMagnitude = _rb.velocity.magnitude;
-		Vector3 forwardHalfExtents = new(0.75f, 0.05f, 0.05f);
-		targetObstacle = ObstacleBoxCast(
-			transform.position,
-			forwardHalfExtents,
-			Quaternion.AngleAxis(calculatedSteerAngle, transform.up) * transform.forward,
-			transform.rotation,
-			Mathf.Clamp(3 * velocityMagnitude + 1.5f, 0f, (vc.target.position - transform.position).magnitude),
-			out targetHitInfo);
-
-		if (targetObstacle)
-		{
-			path = new();
-			if (NavMesh.CalculatePath(transform.position, vc.target.position, NavMesh.AllAreas, path))
-			{
-				float targetDist = 4f;
-				Vector3 targetPoint = Vector3.zero;
-				for (int i = 0; i < path.corners.Length - 1; i++)
-				{
-					float segmentLength = (path.corners[i + 1] - path.corners[i]).magnitude;
-					Debug.Log(segmentLength);
-					if (segmentLength > targetDist)
-					{
-						targetPoint = Vector3.Lerp(path.corners[i], path.corners[i + 1], targetDist / segmentLength);
-						break;
-					}
-					else
-					{
-						targetDist -= segmentLength;
-					}
-				}
-				calculatedSteerAngle = SteerAngleToTarget(targetPoint - transform.position);
-				navMeshTarget = targetPoint;
-			}
-		}
-	}
-
-	public bool ObstacleBoxCast(Vector3 center, Vector3 halfExtents, Vector3 direction, Quaternion orientation, float distance, out RaycastHit hitInfo)
-	{
-		hitInfo = default;
-		bool obstacleHit = false;
-
-		RaycastHit[] hits = Physics.BoxCastAll(center, halfExtents, direction, orientation, distance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
-
-		float maxDistance = Mathf.Infinity;
-
-		foreach (RaycastHit hit in hits)
-		{
-			if (hit.point == Vector3.zero ||
-				new Vector2(hit.normal.x, hit.normal.z).magnitude < hit.normal.y || // If the normal points more upward than sideways, it probably isnt relevant
-				hit.transform.IsChildOf(transform.root))
-				continue;
-
-			if (hit.distance < maxDistance)
-			{
-				maxDistance = hit.distance;
-				obstacleHit = true;
-				hitInfo = hit;
-			}
-		}
-
-		return obstacleHit;
-
-	}
-
-	private void OnDrawGizmos()
-	{
-		//VisualizeSteering();
-
-		Debug.DrawLine(transform.position, transform.position + debugDesire, Color.red);
-
-		Color orange = new(1f, 0.5f, 0f);
-
-		if (_rb)
-		{
-			//Debug.DrawLine(transform.position, transform.position + transform.forward * _rb.velocity.magnitude, Color.magenta);
-
-
-			if (targetObstacle)
-			{
-				Gizmos.color = Color.red;
-				Gizmos.DrawSphere(navMeshTarget, 0.25f);
-				if (path != null)
-				{
-					for (int i = 0; i < path.corners.Length - 1; i++)
-					{
-						Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.green);
-						Handles.Label(path.corners[i], "" + i);
-
-					}
-				}
-				Gizmos.color = orange;
-
-				Debug.DrawLine(targetHitInfo.point, transform.position, orange);
-				Debug.DrawLine(targetHitInfo.point, targetHitInfo.point + targetHitInfo.normal, orange);
-				Gizmos.DrawSphere(targetHitInfo.point, 0.25f);
-			}
-		}
-
-
-		Gizmos.color = Color.red;
-		Gizmos.DrawSphere(_steerTarget, 0.25f);
-
-	}
-}
-
-
-//CODE GRAVEYARD
+	}*/
 /*void VisualizeSteering()
 		{
 			Debug.DrawLine(transform.position, transform.position + Quaternion.AngleAxis(_steeringClampMin, transform.up) * transform.forward * 4f, Color.blue);
