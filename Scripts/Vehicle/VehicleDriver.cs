@@ -20,22 +20,37 @@ public class VehicleDriver : MonoBehaviour
 	private Vector3 _steerTarget, _weightTarget;
 	private float calculatedSteerAngle;
 
-	Vector3 debugDesire = new();
+	protected float forwardAxis, targetSpeed;
+
+	protected bool decelerate, accelerate;
+
 	Vector3 navMeshTarget = new();
 
+	Vector3 weightedSpeedVec = new();
+
 	private float offset, offsetVel;
+
+	protected float _desiredThrottle, _desiredBrake;
 
 
 	private RaycastHit targetHitInfo;
 	private bool targetObstacle;
+
+	protected float speed;
 
 	protected void Awake()
 	{
 		vc = GetComponent<VehicleController>();
 		_rb = GetComponent<Rigidbody>();
 	}
+	private void Update()
+	{
+		Pedals();
+	}
 	private void FixedUpdate()
 	{
+		speed = _rb.velocity.magnitude;
+
 		Navigate();
 		OffsetFU();
 	}
@@ -48,7 +63,8 @@ public class VehicleDriver : MonoBehaviour
 
 	private void Navigate()
 	{
-
+		accelerate = false;
+		decelerate = false;
 		if (!target)
 		{
 			vc.throttle = 0;
@@ -56,8 +72,6 @@ public class VehicleDriver : MonoBehaviour
 			vc.desiredSteerAngle = 0;
 			return;
 		}
-		vc.throttle = 1f;
-		vc.brake = 0f;
 
 		NavNode targetNode = target.GetComponent<NavNode>();
 		if (targetNode)
@@ -68,15 +82,14 @@ public class VehicleDriver : MonoBehaviour
 			_weightTarget = samples[2].position;
 
 
-			float maxVelocity = samples[2].forward.magnitude / 3.6f;
-			if (_rb.velocity.magnitude > maxVelocity)
-			{
-				vc.throttle = 0f;
-				vc.brake = 1f;
-			}
+			targetSpeed = samples[2].forward.magnitude / 3.6f;
+
+			//decelerate = _rb.velocity.magnitude > maxVelocity;
+			//accelerate = _rb.velocity.magnitude < maxVelocity - 1f;
 		}
 		calculatedSteerAngle = SteerAngleToTarget(_steerTarget - transform.position);
-		NavMeshObstacleAvoidance();
+		//NavMeshObstacleAvoidance();
+		RetardAvoidance();
 
 		vc.desiredSteerAngle = calculatedSteerAngle;
 	}
@@ -122,6 +135,39 @@ public class VehicleDriver : MonoBehaviour
 		return Mathf.Clamp(NormalizeAngle(localWishDir.eulerAngles.y), -vc.maxSteerAngle, vc.maxSteerAngle);
 	}
 
+	//RETARD MEANS SLOW DOWN
+	protected void RetardAvoidance()
+	{
+		Vector3 dir = Quaternion.AngleAxis(calculatedSteerAngle, transform.up) * transform.forward;
+
+		RaycastHit
+			forwardHitInfo,
+			targetHitInfo,
+			closestHitInfo;
+
+		bool
+			forwardObstacle,
+			targetObstacle;
+
+		weightedSpeedVec = _rb.velocity;
+
+		forwardObstacle = ObstacleSweepTest(
+			transform.forward,
+			16f,
+			out forwardHitInfo);
+		targetObstacle = ObstacleSweepTest(
+			dir,
+			16f,
+			out targetHitInfo);
+
+		if (forwardObstacle && targetObstacle) closestHitInfo = (forwardHitInfo.distance > targetHitInfo.distance) ? targetHitInfo : forwardHitInfo;
+		else if (forwardObstacle) closestHitInfo = forwardHitInfo;
+		else if (targetObstacle) closestHitInfo = targetHitInfo;
+		else return;
+
+		targetSpeed = Mathf.Min(targetSpeed, closestHitInfo.distance - 1f);
+	}
+
 	private void NavMeshObstacleAvoidance()
 	{
 		float velocityMagnitude = _rb.velocity.magnitude;
@@ -161,6 +207,20 @@ public class VehicleDriver : MonoBehaviour
 		}
 	}
 
+	protected void Pedals()
+	{
+		float axisTarget, axisDiff;
+
+		axisTarget = targetSpeed > 0 ? targetSpeed - speed : -1f / (speed + 2f/3f);
+
+		axisDiff = forwardAxis - axisTarget;
+
+		forwardAxis -= Mathf.Sign(axisDiff) * Mathf.Min(4f * Time.deltaTime, Mathf.Abs(axisDiff));
+
+		vc.throttle = Mathf.Clamp01(forwardAxis - 0.5f);
+		vc.brake = Mathf.Clamp01(-forwardAxis - 0.5f);
+	}
+
 	public bool ObstacleBoxCast(Vector3 center, Vector3 halfExtents, Vector3 direction, Quaternion orientation, float distance, out RaycastHit hitInfo)
 	{
 		hitInfo = default;
@@ -186,6 +246,31 @@ public class VehicleDriver : MonoBehaviour
 		}
 		return obstacleHit;
 	}
+	public bool ObstacleSweepTest(Vector3 direction, float distance, out RaycastHit hitInfo)
+	{
+		hitInfo = default;
+		bool obstacleHit = false;
+
+		RaycastHit[] hits = _rb.SweepTestAll(direction, distance, QueryTriggerInteraction.Ignore);
+
+		float maxDistance = Mathf.Infinity;
+
+		foreach (RaycastHit hit in hits)
+		{
+			if (new Vector2(hit.normal.x, hit.normal.z).magnitude < hit.normal.y || // If the normal points more upward than sideways, it probably isnt relevant
+				hit.transform.IsChildOf(transform.root))
+				continue;
+
+			if (hit.distance < maxDistance)
+			{
+				maxDistance = hit.distance;
+				obstacleHit = true;
+				hitInfo = hit;
+			}
+		}
+
+		return obstacleHit;
+	}
 
 	public Vector3 GetPointAlongPolyLine(float distance, Vector3[] polyLine)
 	{
@@ -197,11 +282,18 @@ public class VehicleDriver : MonoBehaviour
 		}
 		return navPath.corners[^1];
 	}
+	public float GetPolyLineLength(Vector3[] polyLine)
+	{
+		float length = 0;
+		for (int i = 1; i < polyLine.Length; i++)
+		{
+			length += (polyLine[i] - polyLine[i - 1]).magnitude;
+		}
+		return length;
+	}
 
 	private void OnDrawGizmos()
 	{
-		Debug.DrawLine(transform.position, transform.position + debugDesire, Color.red);
-
 		Color orange = new(1f, 0.5f, 0f);
 
 		if (_rb)
@@ -233,7 +325,6 @@ public class VehicleDriver : MonoBehaviour
 
 		Gizmos.color = Color.green;
 		Gizmos.DrawSphere(Vector3.up + Vector3.right * offset, 0.25f);
-
 	}
 
 }
@@ -388,33 +479,6 @@ public class VehicleDriver : MonoBehaviour
 			//_steeringClampMin = avoidanceAngle < 0 ? -vc.maxSteerAngle : avoidanceAngle;
 			//_steeringClampMax = avoidanceAngle > 0 ? vc.maxSteerAngle : avoidanceAngle;
 		}*/
-
-/*public bool ObstacleSweepTest(Vector3 direction, float distance, out RaycastHit hitInfo)
-{
-	hitInfo = default;
-	bool obstacleHit = false;
-
-	RaycastHit[] hits = _rb.SweepTestAll(direction, distance, QueryTriggerInteraction.Ignore);
-
-	float maxDistance = Mathf.Infinity;
-
-	foreach (RaycastHit hit in hits)
-	{
-		if (new Vector2(hit.normal.x, hit.normal.z).magnitude < hit.normal.y || // If the normal points more upward than sideways, it probably isnt relevant
-			hit.transform.IsChildOf(transform.root))
-			continue;
-
-		if (hit.distance < maxDistance)
-		{
-			maxDistance = hit.distance;
-			obstacleHit = true;
-			hitInfo = hit;
-		}
-	}
-
-	return obstacleHit;
-
-}*/
 
 /*Vector3
 				averageNormal =

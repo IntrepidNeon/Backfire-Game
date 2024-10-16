@@ -39,7 +39,6 @@ public class NavNode : MonoBehaviour
 
 	void OnDrawGizmos()
 	{
-		Gizmos.color = Color.magenta;
 		NavNode node;
 		Vector3 pos = transform.position;
 		if (transform.GetComponent<NavNode>() != null)
@@ -77,24 +76,24 @@ public class NavNode : MonoBehaviour
 
 				float x = Mathf.Clamp01((current.forward.magnitude - 12f) / 16f);
 				Color weightedColor = new Color(-2 * Mathf.Abs(x) + 1, -2 * Mathf.Abs(x - 0.5f) + 1, -2 * Mathf.Abs(x - 1f) + 1);
+				Gizmos.color = weightedColor;
 
+				if (i == 0) Gizmos.DrawSphere(transform.position, node.sphereCollider.radius);
+				
 				if (i > 0)
 				{
-					Debug.DrawLine(prevRight, currentRight, weightedColor);
-					Debug.DrawLine(prevLeft, currentLeft, weightedColor);
+					Gizmos.DrawLine(prevRight, currentRight);
+					Gizmos.DrawLine(prevLeft, currentLeft);
 
-					Debug.DrawLine(prevRight, current.position, weightedColor);
-					Debug.DrawLine(prevLeft, current.position, weightedColor);
+					Gizmos.DrawLine(prevRight, current.position);
+					Gizmos.DrawLine(prevLeft, current.position);
 				}
 				current = current.next;
 				prevRight = currentRight;
 				prevLeft = currentLeft;
 			}
 			//Handles.DrawWireDisc(pos, Vector3.up, node.sphereCollider.radius);
-			Gizmos.DrawSphere(transform.position, node.sphereCollider.radius / 8);
-
 			Handles.Label(pos, "  " + transform.parent.name + "." + transform.name);
-
 		}
 	}
 
