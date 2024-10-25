@@ -21,12 +21,11 @@ public class EnemyDriver : VehicleDriver
 	private EnemyNavState _navState = EnemyNavState.Follow;
 	private void FixedUpdate()
 	{
+		speed = _rb.velocity.magnitude;
 		Navigate();
 	}
 	public void Navigate()
 	{
-		vc.throttle = 1f;
-		vc.brake = 0f;
 		VehicleController targetController = target.GetComponent<VehicleController>();
 		if (targetController)
 		{
@@ -60,9 +59,7 @@ public class EnemyDriver : VehicleDriver
 	private bool Follow(VehicleController targetController)
 	{
 		NavMeshPath path = new();
-		float
-			pathLength = Mathf.Infinity,
-			fVel = Vector3.Dot(_rb.velocity, transform.forward);
+		float pathLength = Mathf.Infinity;
 
 		if (NavMesh.CalculatePath(transform.position, targetController.transform.position, NavMesh.AllAreas, path))
 			pathLength = GetPolyLineLength(path.corners);
@@ -73,8 +70,8 @@ public class EnemyDriver : VehicleDriver
 		}
 		else return false;
 
-		vc.throttle = Mathf.Clamp01(pathLength - fVel);
-		vc.brake = Mathf.Clamp01(-pathLength + fVel);
+		//if we are X meters away, match target's speed. Otherwise accelerate if further and decelerate if closer.
+		targetSpeed = pathLength / 6f * targetController.Velocity.magnitude;
 
 		return true;
 	}

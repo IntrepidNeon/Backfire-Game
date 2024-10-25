@@ -22,15 +22,9 @@ public class VehicleDriver : MonoBehaviour
 
 	protected float forwardAxis, targetSpeed;
 
-	protected bool decelerate, accelerate;
-
 	Vector3 navMeshTarget = new();
 
-	Vector3 weightedSpeedVec = new();
-
 	private float offset, offsetVel;
-
-	protected float _desiredThrottle, _desiredBrake;
 
 
 	private RaycastHit targetHitInfo;
@@ -63,8 +57,6 @@ public class VehicleDriver : MonoBehaviour
 
 	private void Navigate()
 	{
-		accelerate = false;
-		decelerate = false;
 		if (!target)
 		{
 			vc.throttle = 0;
@@ -149,8 +141,6 @@ public class VehicleDriver : MonoBehaviour
 			forwardObstacle,
 			targetObstacle;
 
-		weightedSpeedVec = _rb.velocity;
-
 		forwardObstacle = ObstacleSweepTest(
 			transform.forward,
 			16f,
@@ -211,7 +201,7 @@ public class VehicleDriver : MonoBehaviour
 	{
 		float axisTarget, axisDiff;
 
-		axisTarget = targetSpeed > 0 ? targetSpeed - speed : -1f / (speed + 2f/3f);
+		axisTarget = targetSpeed > 0 ? targetSpeed - speed : -1f / (speed + 2f / 3f);
 
 		axisDiff = forwardAxis - axisTarget;
 
