@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -91,8 +92,8 @@ public class EnemyDriver : VehicleDriver
 			pathR = new();
 
 		Vector3
-			forwardVector = targetController.transform.forward * targetFVel,
-			rightVector = targetController.transform.right * (2.5f + targetRVel * fVel),
+			forwardVector = targetController.transform.forward * 1.5f,
+			rightVector = targetController.transform.right * 2f,
 			pathTargetL = forwardVector - rightVector,
 			pathTargetR = forwardVector + rightVector;
 
@@ -115,8 +116,10 @@ public class EnemyDriver : VehicleDriver
 		}
 		else return false;
 
-		vc.throttle = Mathf.Clamp01(pathLength - fVel);
-		vc.brake = Mathf.Clamp01(-pathLength + fVel);
+		//vc.throttle = Mathf.Clamp01(pathLength - fVel);
+		//vc.brake = Mathf.Clamp01(-pathLength + fVel);
+
+		targetSpeed = pathLength / 3f * targetController.Velocity.magnitude;
 
 		return true;
 

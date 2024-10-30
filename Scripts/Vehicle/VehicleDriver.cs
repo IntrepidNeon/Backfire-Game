@@ -81,7 +81,7 @@ public class VehicleDriver : MonoBehaviour
 		}
 		calculatedSteerAngle = SteerAngleToTarget(_steerTarget - transform.position);
 		//NavMeshObstacleAvoidance();
-		RetardAvoidance();
+		//RetardAvoidance();
 
 		vc.desiredSteerAngle = calculatedSteerAngle;
 	}
