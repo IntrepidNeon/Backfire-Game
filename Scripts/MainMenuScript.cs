@@ -9,11 +9,11 @@ public class MainMenuScript : MonoBehaviour
 		SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
 	}
 
+	public void OpenShop() {
+		SceneManager.LoadScene(2);
+	}
+
 	public void QuitGame() {
 		Application.Quit();
 	}
-
-
-
-
 }
