@@ -5,7 +5,6 @@ using UnityEngine;
 public abstract class WeaponController : MonoBehaviour
 {
 	public float Damage; //Damage Per Hit
-	public float Delay; //Delay Between Hits
 
 	public virtual void Equip()
 	{
