@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2796270827034549875}
   - component: {fileID: 3463566419638985107}
   m_Layer: 0
-  m_Name: PrototypeGun
+  m_Name: Revolver
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -46,14 +46,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Damage: 5
-  Reserve: 1000
   LaunchSpeed: 64
   ProjectilePrefab: {fileID: 1190399997683116386, guid: 3b28a6e51e9bfe14babb03087d65a0f8, type: 3}
   ProjectileSpawn: {fileID: 6680805959577764596}
   MaxBullets: 6
-  FireRate: 1
+  Bullets: 0
+  FireRate: 2
   ReloadTime: 3
   Magazine: 0
+  Automatic: 0
 --- !u!1 &5399608101855393093
 GameObject:
   m_ObjectHideFlags: 0
@@ -64,7 +65,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6680805959577764596}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: BulletSpawn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

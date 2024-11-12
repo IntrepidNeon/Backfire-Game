@@ -34,7 +34,7 @@ public class NavNode : MonoBehaviour
 	{
 		VehicleDriver driver = other.transform.root.GetComponentInChildren<VehicleDriver>();
 
-		if (driver && driver.target == transform) { driver.target = next.transform; Debug.Log("driver collision"); }
+		if (driver && driver.target == transform) { driver.target = next.transform;}
 	}
 
 	void OnDrawGizmos()

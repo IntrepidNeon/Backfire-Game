@@ -60,7 +60,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0.734, z: -1.721}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 3547452290282385266}
   m_Father: {fileID: 4914507343408033347}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6679467331937204307
@@ -83,6 +84,52 @@ MonoBehaviour:
   TransitionTime: 1
   PullDistance: 0.5
   Sensitivity: 0.6
+--- !u!1 &6691043511190217902
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3547452290282385266}
+  - component: {fileID: 8047502639398889336}
+  m_Layer: 0
+  m_Name: WeaponPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3547452290282385266
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6691043511190217902}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.1, z: 0.2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1980700237302106383}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8047502639398889336
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6691043511190217902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a998a799077020b4b8de3c4b868ed0ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MainGunPrefab: {fileID: 3463566419638985107, guid: 88b2617c909160c438f8602ae10bc87f, type: 3}
+  SpecialGunPrefab: {fileID: 0}
 --- !u!1 &7567563359528608445
 GameObject:
   m_ObjectHideFlags: 0
@@ -167,7 +214,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5785168177942315858, guid: dc697c86cdfeb1041827432a9b6c4a7d, type: 3}
       propertyPath: m_Name
-      value: pv2
+      value: PlayerVehicle
       objectReference: {fileID: 0}
     - target: {fileID: 6558045221871229416, guid: dc697c86cdfeb1041827432a9b6c4a7d, type: 3}
       propertyPath: m_RootOrder

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting.Dependencies.Sqlite;
@@ -6,98 +7,99 @@ using UnityEngine;
 public class Gun : ProjectileWeapon
 {
 	public int MaxBullets;          // Maximum bullets that can be fired before reloading
+	public int Bullets;             // Number of bullets currently in gun
 	public float FireRate;          // Bullets per second
 	public float ReloadTime;        // Time to reload to max ammo in seconds
 	public bool Magazine;           // If true, reload all bullets at once and dont keep progress
+	public bool Automatic;          // Whether holding down the fire button continuously fires bullets
 
-	private int _bullets;
+	public event Action OnReloadStart;
+
+	public Coroutine ReloadRoutine, FireRoutine;
+
+	public bool IsReloading { get { return _isReloading; } }
+
 	private bool _isReloading;
 	private bool _isFiring;
 
-	private Coroutine _reloadRoutine;
-
 	public override void Equip()
 	{
+		CancelReload();
+
 		base.Equip();
-		_isReloading = false;
+
 		_isFiring = true;
-		StartCoroutine(FireRoutine());
+		StartCoroutine(FireIEnumerator());
 	}
 	public override void Unequip()
 	{
 		CancelReload();
+
 		base.Unequip();
-	}
-
-	private void Update()
-	{
-		Control();
-	}
-
-	private void Control()
-	{
-		if (!gameObject.activeSelf) return;
-		if (Input.GetKey(KeyCode.Mouse0))
-		{
-			Fire();
-		}
-		if (Input.GetKey(KeyCode.R))
-		{
-			Reload();
-		}
 	}
 	public void Fire()
 	{
+		if (!gameObject.activeSelf) return;
+
 		if (_isFiring) return;
 
-		if (_bullets < 1) { Reload(); return; }
+		if (Bullets < 1) { Reload(); return; }
 
 		CancelReload();
-		_isFiring = true;
+
 		SpawnProjectile();
-		_bullets -= 1;
-		StartCoroutine(FireRoutine());
+		Bullets -= 1;
+		StartCoroutine(FireIEnumerator());
+		_isFiring = true;
+
 	}
 
 	public void Reload()
 	{
-		if (_bullets == MaxBullets || Reserve < 1 || _isReloading) return;
+		if (!gameObject.activeSelf) return;
 
+		if (Bullets == MaxBullets || _isReloading /*|| Reserve < 1*/) return;
+
+		if (Magazine)
+		{
+			//Reserve += Bullets;
+			Bullets = 0;
+		}
 		CancelReload();
+		ReloadRoutine = StartCoroutine(ReloadIEnumerator());
 		_isReloading = true;
-		_reloadRoutine = StartCoroutine(ReloadRoutine());
+		OnReloadStart?.Invoke();
 
 	}
 	public void CancelReload()
 	{
+		if (!gameObject.activeSelf) return;
 		_isReloading = false;
-		if (_reloadRoutine != null) StopCoroutine(_reloadRoutine);
-
+		if (ReloadRoutine != null) StopCoroutine(ReloadRoutine);
 	}
-	public IEnumerator FireRoutine()
+
+	public IEnumerator FireIEnumerator()
 	{
 		yield return new WaitForSeconds(1 / Mathf.Max(FireRate, Mathf.Epsilon));
 		_isFiring = false;
 	}
-	public IEnumerator ReloadRoutine()
+	public IEnumerator ReloadIEnumerator()
 	{
 		if (Magazine)
 		{
 			yield return new WaitForSeconds(ReloadTime);
-			_bullets = Mathf.Min(MaxBullets, Reserve);
-			Reserve -= _bullets;
+			Bullets = MaxBullets;// Mathf.Min(MaxBullets, Reserve);
+								 //Reserve -= Bullets;
 		}
 		else
 		{
-			while (_bullets < MaxBullets && Reserve > 0)
+			while (Bullets < MaxBullets)// && Reserve > 0)
 			{
 				yield return new WaitForSeconds(ReloadTime / MaxBullets);
-				_bullets += 1;
-				Reserve -= 1;
+				Bullets += 1;
+				//Reserve -= 1;
 			}
 		}
 		_isReloading = false;
-
-		Debug.Log("Reload Complete!");
 	}
 }

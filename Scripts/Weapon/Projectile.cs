@@ -6,7 +6,8 @@ using UnityEngine;
 public class Projectile : MonoBehaviour
 {
 	private Rigidbody _rb;
-	private BoxCollider _boxCollider;
+	private TrailRenderer _trailRenderer;
+
 
 	[System.NonSerialized]
 	public ProjectileWeapon parent;
@@ -16,9 +17,14 @@ public class Projectile : MonoBehaviour
 	private void Awake()
 	{
 		_rb = GetComponent<Rigidbody>();
-		_boxCollider = GetComponent<BoxCollider>();
+		_trailRenderer = GetComponent<TrailRenderer>();
 
 		Destroy(gameObject, 5f);
+	}
+
+	private void OnCollisionEnter(Collision collision)
+	{
+		parent.ProjectileHit();
 	}
 
 }
