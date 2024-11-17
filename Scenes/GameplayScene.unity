@@ -967,7 +967,7 @@ GameObject:
   m_Component:
   - component: {fileID: 312242306}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: GameManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1184,7 +1184,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 5/6
+  m_text: 0/0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1596,6 +1596,7 @@ GameObject:
   m_Component:
   - component: {fileID: 608519652}
   - component: {fileID: 608519653}
+  - component: {fileID: 608519654}
   m_Layer: 5
   m_Name: HUD Parent
   m_TagString: Untagged
@@ -1633,6 +1634,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 608519651}
   m_CullTransparentMesh: 1
+--- !u!114 &608519654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 608519651}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4c5dfc430f1fee4195d511b72eecfa4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  healthBarAmount: {fileID: 695781149}
+  timeText: {fileID: 1830742657}
+  ammoText: {fileID: 383257677}
 --- !u!1 &638205660
 GameObject:
   m_ObjectHideFlags: 0
@@ -4639,7 +4655,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 04:34
+  m_text: 00:00
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
