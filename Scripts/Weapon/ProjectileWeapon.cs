@@ -46,6 +46,6 @@ public abstract class ProjectileWeapon : WeaponController
 
 	public void ProjectileHit()
 	{
-
+		print("ProjectileHit() activated");
 	}
 }
