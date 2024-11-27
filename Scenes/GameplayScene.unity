@@ -3063,7 +3063,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!82 &1153537016
 AudioSource:
   m_ObjectHideFlags: 0
@@ -3467,6 +3467,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5726334384870667513, guid: e4288f974f9adf449b729ca0bccf2080, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1266964178}
+    - targetCorrespondingSourceObject: {fileID: 5726334384870667513, guid: e4288f974f9adf449b729ca0bccf2080, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1266964182}
   m_SourcePrefab: {fileID: 100100000, guid: e4288f974f9adf449b729ca0bccf2080, type: 3}
 --- !u!1 &1266964176 stripped
 GameObject:
@@ -3491,6 +3494,19 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4914507343408033347, guid: e4288f974f9adf449b729ca0bccf2080, type: 3}
   m_PrefabInstance: {fileID: 1266964175}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1266964182
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1266964176}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7300bf459a479e64ebb59cea9faad5a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaxHealth: 100
 --- !u!1 &1290784195
 GameObject:
   m_ObjectHideFlags: 0
