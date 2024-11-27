@@ -24,7 +24,15 @@ public class Projectile : MonoBehaviour
 
 	private void OnCollisionEnter(Collision collision)
 	{
-		parent.ProjectileHit();
+		if(collision.transform.root != parent.transform.root)
+		{
+			Damagable receiver = collision.gameObject.GetComponent<Damagable>();
+			if (receiver)
+			{
+				parent.DoDamage(receiver);
+				Destroy(gameObject);
+			}
+		}
 	}
 
 }

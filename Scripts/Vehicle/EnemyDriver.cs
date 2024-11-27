@@ -22,6 +22,7 @@ public class EnemyDriver : VehicleDriver
 	private EnemyNavState _navState = EnemyNavState.Follow;
 	private void FixedUpdate()
 	{
+		if (!_damagable.IsAlive) return;
 		speed = _rb.velocity.magnitude;
 		Navigate();
 	}

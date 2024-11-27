@@ -43,9 +43,4 @@ public abstract class ProjectileWeapon : WeaponController
 			rbFetch = rbFetch.parent;
 		}
 	}
-
-	public void ProjectileHit()
-	{
-		print("ProjectileHit() activated");
-	}
 }

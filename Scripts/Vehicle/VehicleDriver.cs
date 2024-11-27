@@ -26,7 +26,7 @@ public class VehicleDriver : MonoBehaviour
 
 	private float offset, offsetVel;
 
-	private Damagable _damagable;
+	protected Damagable _damagable;
 
 	private RaycastHit targetHitInfo;
 	private bool targetObstacle;

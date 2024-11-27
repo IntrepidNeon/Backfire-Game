@@ -12,6 +12,8 @@ public class Damagable : MonoBehaviour
 
 	public event Action OnHealthEmpty;
 
+	public bool IsAlive { get { return _alive; } }
+
 	public int Health
 	{
 		get { return _health; }
@@ -24,6 +26,7 @@ public class Damagable : MonoBehaviour
 		{
 			OnHealthEmpty?.Invoke();
 			_alive = false;
+			Debug.Log(gameObject + " died");
 		}
 		if (Health > 0 && !_alive) _alive = true;
 	}
