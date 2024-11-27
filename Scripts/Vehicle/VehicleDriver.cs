@@ -8,7 +8,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 
-[RequireComponent(typeof(VehicleController))]
+[RequireComponent(typeof(VehicleController),typeof(Damagable))]
 public class VehicleDriver : MonoBehaviour
 {
 	protected VehicleController vc;
@@ -26,6 +26,7 @@ public class VehicleDriver : MonoBehaviour
 
 	private float offset, offsetVel;
 
+	private Damagable _damagable;
 
 	private RaycastHit targetHitInfo;
 	private bool targetObstacle;
@@ -36,6 +37,7 @@ public class VehicleDriver : MonoBehaviour
 	{
 		vc = GetComponent<VehicleController>();
 		_rb = GetComponent<Rigidbody>();
+		_damagable = GetComponent<Damagable>();
 	}
 	private void Update()
 	{
