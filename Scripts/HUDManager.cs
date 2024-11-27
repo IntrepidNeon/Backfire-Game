@@ -7,11 +7,14 @@ using TMPro;
 public class HUDManager : MonoBehaviour
 {
     [SerializeField]
-    private Slider healthBarAmount;
+    private WeaponManager wm;
+    [SerializeField]
+    private Damagable damagable;
 
     [SerializeField]
+    private Slider healthBarAmount;
+    [SerializeField]
     private TMP_Text timeText;
-
     [SerializeField]
     private TMP_Text ammoText;
 
@@ -31,15 +34,31 @@ public class HUDManager : MonoBehaviour
 
     private void AmmoCount()
     {
+        if (wm.MainGun.isActiveAndEnabled)
+        {
+            ammoText.text = wm.MainGun.Bullets + "/" + wm.MainGun.MaxBullets;
+        }
+        else if (wm.SpecialGun.isActiveAndEnabled)
+        {
+            ammoText.text = wm.SpecialGun.Bullets + "/" + wm.SpecialGun.MaxBullets;
+        }
+    }
 
+    private void HealthUpdate()
+    {
+        healthBarAmount.value = damagable.Health;
+    }
+
+    private void Start()
+    {
+        healthBarAmount.maxValue = damagable.MaxHealth;
+        healthBarAmount.value = healthBarAmount.maxValue;
     }
 
     private void Update()
     {
         AddTime();
         AmmoCount();
+        HealthUpdate();
     }
-
-
-
 }
