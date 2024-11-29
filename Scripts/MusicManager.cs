@@ -6,7 +6,7 @@ public class MusicManager : MonoBehaviour
 {
     public AudioClip[] musicArray;
     public AudioSource source;
-    int CurrentSong;
+    private int CurrentSong;
 
     private void Awake()
     {
