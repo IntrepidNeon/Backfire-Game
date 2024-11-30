@@ -9,6 +9,13 @@ public class ShopMenuScript : MonoBehaviour
 	public int DrumGunDamage;
 	public int DrumGunMaxBullets;
 	public int PlayerMaxHealth;
+	private int _cash;
+
+	public int Cash
+	{
+		get { return _cash; }
+		set { _cash = 0; }
+	}
 
 	public void PlayGame()
 	{

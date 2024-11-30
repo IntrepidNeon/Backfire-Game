@@ -26,13 +26,16 @@ public class PlayerMovement : MonoBehaviour
 		_newAnchor = _currentAnchor;
 
 		transform.SetPositionAndRotation(AnchorPoints[_currentAnchor].position, AnchorPoints[_currentAnchor].rotation);
+
+		Cursor.visible = false;
+		Cursor.lockState = CursorLockMode.Locked;
 	}
 
 	// Update is called once per frame
 	void Update()
 	{
-		Cursor.visible = false;
-		Cursor.lockState = CursorLockMode.Locked;
+		//Cursor.visible = false;
+		//Cursor.lockState = CursorLockMode.Locked;
 
 		if (Input.GetKey(KeyCode.D))
 		{
