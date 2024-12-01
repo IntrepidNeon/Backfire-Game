@@ -12,6 +12,8 @@ public class Gun : ProjectileWeapon
 	public float ReloadTime;        // Time to reload to max ammo in seconds
 	public bool Magazine;           // If true, reload all bullets at once and dont keep progress
 	public bool Automatic;          // Whether holding down the fire button continuously fires bullets
+	public AudioClip shootSFX;      // SFX for gunshot
+	public AudioSource audioSource; // Audio source to play gunshots
 
 	public event Action OnReloadStart;
 
@@ -22,7 +24,12 @@ public class Gun : ProjectileWeapon
 	private bool _isReloading;
 	private bool _isFiring;
 
-	public override void Equip()
+    private void Start()
+    {
+		audioSource = GetComponent<AudioSource>();
+    }
+
+    public override void Equip()
 	{
 		CancelReload();
 
@@ -50,6 +57,7 @@ public class Gun : ProjectileWeapon
 		SpawnProjectile();
 		Bullets -= 1;
 		StartCoroutine(FireIEnumerator());
+		audioSource.PlayOneShot(shootSFX, .7f);
 		_isFiring = true;
 
 	}
