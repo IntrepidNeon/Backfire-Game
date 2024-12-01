@@ -7,11 +7,13 @@ public class GameOverScript : MonoBehaviour
     public GameObject GameOverUI;
     public GameObject HUD;
     public Damagable damagable;
-    public bool GameIsOver;
+    public bool gameIsOver;
+
+    public bool GameIsOver { get { return gameIsOver; } }
 
     private void Start()
     {
-        GameIsOver = false;
+        gameIsOver = false;
     }
 
     private void Update()
@@ -27,7 +29,7 @@ public class GameOverScript : MonoBehaviour
         GameOverUI.SetActive(true);
         HUD.SetActive(false);
         Time.timeScale = 0f;
-        GameIsOver = true;
+        gameIsOver = true;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
