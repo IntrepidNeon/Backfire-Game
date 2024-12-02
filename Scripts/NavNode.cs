@@ -1,8 +1,8 @@
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 [RequireComponent(typeof(SphereCollider))]
 public class NavNode : MonoBehaviour
 {
@@ -37,6 +37,7 @@ public class NavNode : MonoBehaviour
 		if (driver && driver.target == transform) { driver.target = next.transform;}
 	}
 
+#if UNITY_EDITOR
 	void OnDrawGizmos()
 	{
 		NavNode node;
@@ -96,7 +97,7 @@ public class NavNode : MonoBehaviour
 			Handles.Label(pos, "  " + transform.parent.name + "." + transform.name);
 		}
 	}
-
+#endif
 
 
 	public void ValidatePoints()

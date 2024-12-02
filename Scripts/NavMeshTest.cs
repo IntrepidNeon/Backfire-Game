@@ -1,14 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using Unity.AI.Navigation;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 using UnityEngine.AI;
+#if UNITY_EDITOR
 using UnityEditor;
-using System.Linq;
-using static UnityEditor.PlayerSettings;
-using Unity.VisualScripting;
+#endif
 
 [RequireComponent(typeof(NavMeshSurface))]
 public class NavMeshTest : MonoBehaviour
@@ -24,6 +19,7 @@ public class NavMeshTest : MonoBehaviour
 		_nms = GetComponent<NavMeshSurface>();
 	}
 
+#if UNITY_EDITOR
 	private void OnDrawGizmos()
 	{
 		NavMeshPath path = new();
@@ -74,6 +70,7 @@ public class NavMeshTest : MonoBehaviour
 			Handles.Label(points[i], "" + i);
 		}
 	}
+#endif
 
 }
 

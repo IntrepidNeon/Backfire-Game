@@ -1,10 +1,9 @@
-using JetBrains.Annotations;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Scripting;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 [RequireComponent(typeof(Rigidbody))]
 public class VehicleController : MonoBehaviour
 {
@@ -111,6 +110,7 @@ public class VehicleController : MonoBehaviour
 		return angle > 180 ? angle - 360 : angle;
 	}
 
+#if UNITY_EDITOR
 	void OnDrawGizmos()
 	{
 		if (_rb)
@@ -118,6 +118,7 @@ public class VehicleController : MonoBehaviour
 			Handles.Label(transform.position, "" + (int)(_rb.velocity.magnitude * 3.6f));
 		}
 	}
+#endif
 }
 
 [System.Serializable]

@@ -1,12 +1,9 @@
-using Palmmedia.ReportGenerator.Core.CodeAnalysis;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 [RequireComponent(typeof(VehicleController),typeof(Damagable))]
 public class VehicleDriver : MonoBehaviour
@@ -283,7 +280,7 @@ public class VehicleDriver : MonoBehaviour
 		}
 		return length;
 	}
-
+#if UNITY_EDITOR
 	private void OnDrawGizmos()
 	{
 		Color orange = new(1f, 0.5f, 0f);
@@ -318,7 +315,7 @@ public class VehicleDriver : MonoBehaviour
 		Gizmos.color = Color.green;
 		Gizmos.DrawSphere(Vector3.up + Vector3.right * offset, 0.25f);
 	}
-
+#endif
 }
 
 

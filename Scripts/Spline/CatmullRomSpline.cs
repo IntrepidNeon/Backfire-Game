@@ -1,7 +1,7 @@
 using UnityEngine;
-using System.Collections;
-using static UnityEditor.PlayerSettings;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 
 //Interpolation between points with a Catmull-Rom spline
 public class CatmullRomSpline : MonoBehaviour
@@ -12,6 +12,7 @@ public class CatmullRomSpline : MonoBehaviour
 	public bool isLooping = true;
 
 	//Display without having to press play
+#if UNITY_EDITOR
 	void OnDrawGizmos()
 	{
 		controlPointsList = transform.GetComponentsInChildren<Transform>();
@@ -36,6 +37,7 @@ public class CatmullRomSpline : MonoBehaviour
 			DisplayCatmullRomSpline(i);
 		}
 	}
+#endif
 
 	//Display a spline between 2 points derived with the Catmull-Rom spline algorithm
 	void DisplayCatmullRomSpline(int pos)
@@ -81,7 +83,7 @@ public class CatmullRomSpline : MonoBehaviour
 	}
 
 	//Returns a position between 4 Vector3 with Catmull-Rom spline algorithm
-	//http://www.iquilezles.org/www/articles/minispline/minispline.htm
+	//http://www.iquilezles.org/www/articles/minispline/minispline.html
 	Vector3 GetCatmullRomPosition(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
 	{
 		//The coefficients of the cubic polynomial (except the 0.5f * which I added later for performance)
