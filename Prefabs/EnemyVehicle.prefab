@@ -167,7 +167,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5785168177942315858, guid: dc697c86cdfeb1041827432a9b6c4a7d, type: 3}
       propertyPath: m_Name
-      value: ev2
+      value: EnemyVehicle
       objectReference: {fileID: 0}
     - target: {fileID: 6558045221871229416, guid: dc697c86cdfeb1041827432a9b6c4a7d, type: 3}
       propertyPath: m_RootOrder
@@ -236,6 +236,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5785168177942315858, guid: dc697c86cdfeb1041827432a9b6c4a7d, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6219588778733838300}
+    - targetCorrespondingSourceObject: {fileID: 5785168177942315858, guid: dc697c86cdfeb1041827432a9b6c4a7d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1564484998599327498}
   m_SourcePrefab: {fileID: 100100000, guid: dc697c86cdfeb1041827432a9b6c4a7d, type: 3}
 --- !u!4 &4914507343408033347 stripped
 Transform:
@@ -259,3 +262,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f188f01dc9da5304297c187dd047cdd6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  target: {fileID: 0}
+--- !u!114 &1564484998599327498
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5726334384870667513}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7300bf459a479e64ebb59cea9faad5a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaxHealth: 1000

@@ -7,7 +7,10 @@ public class NodeGraphManager : MonoBehaviour
 
 	private void OnDrawGizmos()
 	{
-
+		Validate();
+	}
+	public void Validate()
+	{
 		navNode = GetComponentsInChildren<NavNode>();
 		if (samplePoints.Length != navNode.Length)
 		{
@@ -29,5 +32,9 @@ public class NodeGraphManager : MonoBehaviour
 			}
 			samplePoints[i] = navNode[i].headSample;
 		}
+	}
+	private void Start()
+	{
+		Validate();
 	}
 }

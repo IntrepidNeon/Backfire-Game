@@ -30,6 +30,11 @@ public class NavNode : MonoBehaviour
 		if (prev) prev.ValidatePoints();
 		ValidatePoints();
 	}
+
+	private void Awake()
+	{
+		OnValidate();
+	}
 	private void OnTriggerEnter(Collider other)
 	{
 		VehicleDriver driver = other.transform.root.GetComponentInChildren<VehicleDriver>();

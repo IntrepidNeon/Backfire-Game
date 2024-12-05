@@ -125,6 +125,7 @@ public class EnemyDriver : VehicleDriver
 
 	private void OnDrawGizmos()
 	{
+		if(!target) return;
 		Vector3 tVec = target.transform.position - transform.position;
 
 		Vector3 midPos = Vector3.Lerp(target.transform.position, transform.position, 12f / tVec.magnitude);
